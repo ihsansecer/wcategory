@@ -1,0 +1,8 @@
+*.py[cod]
+*.pyc
+__pycache__
+
+.idea
+
+input/
+output/
