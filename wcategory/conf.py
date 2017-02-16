@@ -2,7 +2,9 @@
 INPUT_DIR = "input"
 # Output folder for manual directory
 OUTPUT_DIR = "output"
-# Folder for manual adds
+# Directory for config file
+CONF_DIR = "conf"
+# Directory for manual adds
 MANUAL_DIR = "manual"
 # Domain file under each category directory
 DOMAINS_FILE = "domains"

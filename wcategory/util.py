@@ -1,9 +1,10 @@
 import glob
 import os
+import sys
 
 import click
 
-from wcategory.conf import DOMAINS_FILE
+from wcategory.conf import DOMAINS_FILE, INPUT_DIR, OUTPUT_DIR, CONF_DIR
 
 
 def append_file(path, string):
@@ -31,6 +32,11 @@ def remove_line(path, line_to_remove):
 def create_directory(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+def remove_directory(path):
+    if not os.path.exists(path):
+        os.removedirs(path)
 
 
 def fix_path(path):
@@ -70,3 +76,41 @@ def print_found_message(line_text, line_number, file):
 def print_not_found_message(line_text):
     message = "\"{}\" is not found".format(line_text)
     click.echo(message)
+
+
+def check_root_permission():
+    if os.getuid() != 0:
+        click.echo("Permission Denied")
+        sys.exit()
+
+
+def check_necessary_files():
+    input_dir_exists = os.path.exists(INPUT_DIR)
+    output_dir_exists = os.path.exists(OUTPUT_DIR)
+    conf_dir_exists = os.path.exists(CONF_DIR)
+    if not (input_dir_exists and output_dir_exists and conf_dir_exists):
+        click.echo("You should first run \"init\" command")
+        sys.exit()
+
+
+def create_necessary_files():
+    necessary_files = [INPUT_DIR, OUTPUT_DIR, CONF_DIR]
+    for file in necessary_files:
+        create_directory(file)
+
+
+def check_environment():
+    check_root_permission()
+    check_necessary_files()
+
+
+def requires_environment_check(function):
+    def check_environment_and_execute(*args, **kwargs):
+        check_environment()
+        function()
+    return check_environment_and_execute
+
+
+def exit_if_false(ctx, param, value):
+    if not value:
+        sys.exit()
