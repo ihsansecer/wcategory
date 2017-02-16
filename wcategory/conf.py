@@ -5,4 +5,4 @@ OUTPUT_DIR = "output"
 # Folder for manual adds
 MANUAL_DIR = "manual"
 # Domain file under each category directory
-DOMAINS_FILE = "domains.txt"
+DOMAINS_FILE = "domains"

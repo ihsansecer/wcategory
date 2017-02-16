@@ -1,7 +1,8 @@
 import click
 
 from wcategory.conf import OUTPUT_DIR, MANUAL_DIR, DOMAINS_FILE
-from wcategory.util import fix_path, create_directory, append_file, remove_line
+from wcategory.util import (fix_path, create_directory, append_file, remove_line, find_domain_files,
+                            search_line_in_files)
 
 
 @click.group()
@@ -40,3 +41,15 @@ def remove(domain, category_path):
     file_path = "{}/{}".format(folder_path, DOMAINS_FILE)
     line_to_remove = "{}\n".format(domain)
     remove_line(file_path, line_to_remove)
+
+
+@cli.command()
+@click.argument("domain")
+@click.option("--directory", "-in", help="Search files under specific directory")
+def search(domain, directory):
+    """
+    Search DOMAIN in domain files under current or specific DIRECTORY
+    """
+    domain_files = find_domain_files(path=directory)
+    line_to_search = "{}\n".format(domain)
+    search_line_in_files(line_to_search, domain_files)
