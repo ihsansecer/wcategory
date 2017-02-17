@@ -4,13 +4,26 @@ import sys
 
 import click
 
-from wcategory.conf import DOMAINS_FILE, INPUT_DIR, OUTPUT_DIR, CONF_DIR
+from wcategory.conf import DOMAINS_FILE, INPUT_DIR, OUTPUT_DIR, CONF_DIR, CONF_EXTENSION
 
 
 def append_file(path, string):
     file = open(path, "a")
     file.write(string)
     file.close()
+
+
+def write_file(path, string):
+    file = open(path, "w")
+    file.write(string)
+    file.close()
+
+
+def read_file(path):
+    file = open(path, "r")
+    content = file.read()
+    file.close()
+    return content
 
 
 def read_lines(path):
@@ -49,9 +62,17 @@ def fix_path(path):
 
 def find_domain_files(path=None):
     if path:
-        path_pattern = "**/{}/**/{}".format(path, DOMAINS_FILE)
+        path_pattern = "**/{}/**/{}**".format(path, DOMAINS_FILE)
     else:
-        path_pattern = "**/{}".format(DOMAINS_FILE)
+        path_pattern = "**/{}**".format(DOMAINS_FILE)
+    return glob.glob(path_pattern, recursive=True)
+
+
+def find_conf_files(service=None):
+    if service:
+        path_pattern = "**/{}/**/{}{}".format(CONF_DIR, service, CONF_EXTENSION)
+    else:
+        path_pattern = "**/{}/**/**{}".format(CONF_DIR, CONF_EXTENSION)
     return glob.glob(path_pattern, recursive=True)
 
 
@@ -114,3 +135,12 @@ def requires_environment_check(function):
 def exit_if_false(ctx, param, value):
     if not value:
         sys.exit()
+
+
+def map_domains_to_path(domain_files, map_path):
+    content = ""
+    for file in domain_files:
+        content += read_file(file)
+    create_directory(map_path)
+    path_to_write = "{}/{}".format(map_path, DOMAINS_FILE)
+    write_file(path_to_write, content)
