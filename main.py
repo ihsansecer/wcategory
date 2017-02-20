@@ -1,7 +1,8 @@
 import click
 
 from wcategory.util import requires_environment_check, exit_if_false
-from wcategory.command import add as _add, remove as _remove, search as _search, map as _map, init as _init
+from wcategory.command import (add_domain_to_category, remove_domain_from_category, search_domain_in_directory,
+                               map_categories_of_service, initialize_environment)
 
 
 @click.group()
@@ -23,7 +24,7 @@ def add(domain, category_path):
     """
     Add DOMAIN to a CATEGORY_PATH under manual directory
     """
-    _add(domain, category_path)
+    add_domain_to_category(domain, category_path)
 
 
 @requires_environment_check
@@ -34,7 +35,7 @@ def remove(domain, category_path):
     """
     Remove DOMAIN from a CATEGORY_PATH under manual directory
     """
-    _remove(domain, category_path)
+    remove_domain_from_category(domain, category_path)
 
 
 @requires_environment_check
@@ -45,7 +46,7 @@ def search(domain, directory):
     """
     Search DOMAIN in domain files under current or specific DIRECTORY
     """
-    _search(domain, directory)
+    search_domain_in_directory(domain, directory)
 
 
 @requires_environment_check
@@ -57,7 +58,7 @@ def map(service, category_path, map_category_path):
     """
     Maps domains from CATEGORY_PATH to MAP_CATEGORY_PATH under a SERVICE
     """
-    _map(service, category_path, map_category_path)
+    map_categories_of_service(service, category_path, map_category_path)
 
 
 @cli.command()
@@ -68,7 +69,7 @@ def init():
     """
     Initializes directory structure and removes existing output directory
     """
-    _init()
+    initialize_environment()
 
 
 if __name__ == '__main__':
