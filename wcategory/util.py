@@ -7,14 +7,8 @@ import click
 from wcategory.conf import DOMAINS_FILE, INPUT_DIR, OUTPUT_DIR, CONF_DIR, CONF_EXTENSION
 
 
-def append_file(path, string):
-    file = open(path, "a")
-    file.write(string)
-    file.close()
-
-
-def write_file(path, string):
-    file = open(path, "w")
+def write_file(path, string, mode):
+    file = open(path, mode)
     file.write(string)
     file.close()
 
@@ -143,4 +137,4 @@ def map_domains_to_path(domain_files, map_path):
         content += read_file(file)
     create_directory(map_path)
     path_to_write = "{}/{}".format(map_path, DOMAINS_FILE)
-    write_file(path_to_write, content)
+    write_file(path_to_write, content, "w")
