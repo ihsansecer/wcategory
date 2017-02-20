@@ -2,7 +2,7 @@ import click
 
 from wcategory.util import requires_environment_check, exit_if_false
 from wcategory.command import (add_domain_to_category, remove_domain_from_category, search_domain_in_directory,
-                               map_categories_of_service, initialize_environment)
+                               map_categories_of_service, initialize_environment, merge_into_output)
 
 
 @click.group()
@@ -59,6 +59,16 @@ def map(service, category_path, map_category_path):
     Maps domains from CATEGORY_PATH to MAP_CATEGORY_PATH under a SERVICE
     """
     map_categories_of_service(service, category_path, map_category_path)
+
+
+@requires_environment_check
+@cli.command()
+@click.option("--service", "-s", help="Merge specific service")
+def merge(service):
+    """
+    Merges input files or input file of specific SERVICE by using files under conf directory
+    """
+    merge_into_output(service)
 
 
 @cli.command()

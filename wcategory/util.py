@@ -4,7 +4,8 @@ import sys
 
 import click
 
-from wcategory.conf import DOMAINS_FILE, INPUT_DIR, OUTPUT_DIR, CONF_DIR, CONF_EXTENSION
+from wcategory.conf import (DOMAINS_FILE, INPUT_DIR, OUTPUT_DIR, CONF_DIR, CONF_EXTENSION, ADD_PREFIX, MAP_PREFIX,
+                            REMOVE_PREFIX)
 
 
 def write_file(path, string, mode):
@@ -54,6 +55,11 @@ def fix_path(path):
     return path
 
 
+def get_file_name(file_path):
+    base_name = os.path.basename(file_path)
+    return os.path.splitext(base_name)[0]
+
+
 def find_domain_files(path=None):
     if path:
         path_pattern = "**/{}/**/{}**".format(path, DOMAINS_FILE)
@@ -62,7 +68,7 @@ def find_domain_files(path=None):
     return glob.glob(path_pattern, recursive=True)
 
 
-def find_conf_files(service=None):
+def find_conf_file(service=None):
     if service:
         path_pattern = "**/{}/**/{}{}".format(CONF_DIR, service, CONF_EXTENSION)
     else:
@@ -137,4 +143,45 @@ def map_domains_to_path(domain_files, map_path):
         content += read_file(file)
     create_directory(map_path)
     path_to_write = "{}/{}".format(map_path, DOMAINS_FILE)
-    write_file(path_to_write, content, "w")
+    write_file(path_to_write, content, "a")
+
+
+def separate_conf_file_by_command(file):
+    lines = read_lines(file)
+    separated_lines = {"map": [], "add": [], "remove": []}
+    for line in lines:
+        line = remove_line_feed(line)
+        if line[0] == MAP_PREFIX:
+            separated_lines["map"] += [line]
+        elif line[0] == ADD_PREFIX:
+            separated_lines["add"] += [line]
+        elif line[0] == REMOVE_PREFIX:
+            separated_lines["remove"] += [line]
+    return separated_lines
+
+
+def remove_line_feed(line):
+    if line[-1] == "\n":
+        return line[:-1]
+    return line
+
+
+def parse_add_remove(command):
+    return command.split(" ")[1:3]
+
+
+def parse_map(command):
+    return command.split(" ")[:2]
+
+
+def invoke_add_remove_commands(command_list, command_function):
+    for command in command_list:
+        args = parse_add_remove(command)
+        command_function(*args)
+
+
+def invoke_map_commands(command_list, file, command_function):
+    service = get_file_name(file)
+    for command in command_list:
+        args = parse_map(command)
+        command_function(service, *args)

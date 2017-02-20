@@ -10,3 +10,9 @@ DOMAINS_FILE = "domains"
 CONF_DIR = "conf"
 # Extension of config files
 CONF_EXTENSION = ".conf"
+# Domain add prefix
+ADD_PREFIX = "+"
+# Category remove prefix
+REMOVE_PREFIX = "-"
+# Category map prefix
+MAP_PREFIX = "/"
