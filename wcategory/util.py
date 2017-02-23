@@ -69,17 +69,17 @@ def get_file_name(file_path):
 
 def find_domain_files(path=None):
     if path:
-        path_pattern = "**/{}/**/{}**".format(path, DOMAINS_FILE)
+        path_pattern = "**/{}/{}".format(path, DOMAINS_FILE)
     else:
-        path_pattern = "**/{}**".format(DOMAINS_FILE)
+        path_pattern = "**/{}".format(DOMAINS_FILE)
     return glob.glob(path_pattern, recursive=True)
 
 
 def find_conf_file(service=None):
     if service:
-        path_pattern = "**/{}/**/{}{}".format(CONF_DIR, service, CONF_EXTENSION)
+        path_pattern = "**/{}/{}{}".format(CONF_DIR, service, CONF_EXTENSION)
     else:
-        path_pattern = "**/{}/**/**{}".format(CONF_DIR, CONF_EXTENSION)
+        path_pattern = "**/{}/**{}".format(CONF_DIR, CONF_EXTENSION)
     return glob.glob(path_pattern, recursive=True)
 
 
