@@ -28,6 +28,13 @@ def read_lines(path):
     return lines
 
 
+def write_lines(path, lines):
+    file = open(path, "w")
+    for line in lines:
+        file.write(line)
+    file.close()
+
+
 def remove_line(path, line_to_remove):
     lines = read_lines(path)
     file = open(path, "w")
@@ -121,7 +128,6 @@ def create_necessary_files():
 
 
 def check_environment():
-    check_root_permission()
     check_necessary_files()
 
 
@@ -137,6 +143,15 @@ def exit_if_false(ctx, param, value):
         sys.exit()
 
 
+def sort_uniquify_lines(path):
+    import functools
+    lines = read_lines(path)
+    lines = functools.reduce(lambda l_list, element: l_list + [element] if element not in l_list else l_list, lines, [])
+    lines.sort()
+    write_lines(path, lines)
+    return lines
+
+
 def map_domains_to_path(domain_files, map_path):
     content = ""
     for file in domain_files:
@@ -144,6 +159,7 @@ def map_domains_to_path(domain_files, map_path):
     create_directory(map_path)
     path_to_write = "{}/{}".format(map_path, DOMAINS_FILE)
     write_file(path_to_write, content, "a")
+    sort_uniquify_lines(path_to_write)
 
 
 def separate_conf_file_by_command(file):
