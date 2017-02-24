@@ -25,6 +25,25 @@ def cli():
     For add conf files: conf/add.conf or conf/add_specific_name.conf
     For remove conf files: conf/rmv.conf or conf/rmv_specific_name.conf
 
+
+    \b
+    Format of conf files:
+    There is three type of conf file:
+    For services (like alexa.conf), for removes (like rmv_foo.conf) and for adds (like add_foo.conf)
+    \b
+    Format of service conf files:
+    Service conf files are just for mapping function
+    For one specific category (You could have unlimited subcategories or not have at all)
+    /from_category/sub_category /to_category
+    For recursively mapping category (Mapping all categories under from_category)
+    /from_category/** /to_category
+    \b
+    Format of add conf files:
+    + domain.com /from_category
+    \b
+    Format of remove conf files:
+    - domain.com /from_category
+
     \b
     Type "python main.py command --help" for command usages
     """
