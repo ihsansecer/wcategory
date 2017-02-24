@@ -1,3 +1,5 @@
+import click
+
 from wcategory.conf import (INPUT_DIR, MANUAL_DIR, DOMAINS_FILE, OUTPUT_DIR, ADD_FILE_PREFIX, REMOVE_FILE_PREFIX,
                             ADD_PREFIX, MAP_PREFIX, REMOVE_PREFIX)
 from wcategory.util import (fix_path, create_directory, remove_line, find_domain_files, search_line_in_files,
@@ -12,6 +14,7 @@ def add_domain_to_category(domain, category_path):
     file_path = "{}/{}".format(directory_path, DOMAINS_FILE)
     string_to_append = "{}\n".format(domain)
     write_file(file_path, string_to_append, "a+")
+    click.secho("Added {} to {}".format(directory_path, domain), fg="green")
     sort_uniquify_lines(file_path)
 
 
@@ -20,12 +23,13 @@ def remove_domain_from_category(domain, category_path):
     file_path = "{}/{}".format(directory_path, DOMAINS_FILE)
     line_to_remove = "{}".format(domain)
     remove_line(file_path, line_to_remove)
+    click.secho("Removed {} from {}".format(directory_path, domain), fg="green")
 
 
-def search_domain_in_directory(domain, directory):
+def search_text_in_directory(text, directory):
     domain_files = find_domain_files(path=directory)
     conf_files = find_conf_files([])
-    line_to_search = "{}".format(domain)
+    line_to_search = "{}".format(text)
     files_to_search = domain_files + conf_files
     search_line_in_files(line_to_search, files_to_search)
 
@@ -42,10 +46,13 @@ def merge_into_output(service):
     remove_conf_files = find_add_remove_conf_files(REMOVE_FILE_PREFIX)
     files_to_exclude = add_conf_files + remove_conf_files
     map_conf_files = find_conf_files(files_to_exclude, service)
+    click.secho("Adding domains in add conf files", fg="blue")
     for file in add_conf_files:
         invoke_add_remove_commands(file, add_domain_to_category, ADD_PREFIX)
+    click.secho("Mapping categories in conf files of services", fg="blue")
     for file in map_conf_files:
         invoke_map_commands(file, map_categories_of_service, MAP_PREFIX)
+    click.secho("Removing domains in remove conf files", fg="blue")
     for file in remove_conf_files:
         invoke_add_remove_commands(file, remove_domain_from_category, REMOVE_PREFIX)
 

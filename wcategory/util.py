@@ -56,11 +56,13 @@ def remove_line(path, line_to_remove):
 def create_directory(path):
     if not os.path.exists(path):
         os.makedirs(path)
+        click.secho("Created directory {}".format(path), fg="green")
 
 
 def remove_directory(path):
-    if not os.path.exists(path):
+    if os.path.exists(path):
         os.removedirs(path)
+        click.secho("Removed directory {}".format(path), fg="green")
 
 
 def fix_path(path):
@@ -112,18 +114,12 @@ def search_line_in_files(line_to_find, files):
 
 def print_found_message(line_text, line_number, file):
     message = "\"{}\" is found at line {} in file \"{}\"".format(line_text, line_number, file)
-    click.echo(message)
+    click.secho(message, fg="green")
 
 
 def print_not_found_message(line_text):
     message = "\"{}\" is not found".format(line_text)
-    click.echo(message)
-
-
-def check_root_permission():
-    if os.getuid() != 0:
-        click.echo("Permission Denied")
-        sys.exit()
+    click.secho(message, bold=True, fg="red")
 
 
 def check_necessary_files():
@@ -131,7 +127,7 @@ def check_necessary_files():
     output_dir_exists = os.path.exists(OUTPUT_DIR)
     conf_dir_exists = os.path.exists(CONF_DIR)
     if not (input_dir_exists and output_dir_exists and conf_dir_exists):
-        click.echo("You should first run \"init\" command")
+        click.secho("You should first run \"init\" command", fg="yellow")
         sys.exit()
 
 
@@ -162,6 +158,7 @@ def sort_uniquify_lines(path):
     lines = read_lines(path)
     lines = functools.reduce(lambda l_list, element: l_list + [element] if element not in l_list else l_list, lines, [])
     lines.sort()
+    click.secho("Sorted and uniquified {} files under {}".format(len(lines), path), fg="green")
     write_lines(path, lines)
     return lines
 
@@ -169,6 +166,7 @@ def sort_uniquify_lines(path):
 def map_domains_to_path(domain_files, map_path):
     content = ""
     for file in domain_files:
+        click.secho("Mapped file {} to {}".format(file, map_path), fg="green")
         content += read_file(file)
         content = fix_content_to_append(content)
     create_directory(map_path)
