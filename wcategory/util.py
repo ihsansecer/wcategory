@@ -14,11 +14,14 @@ def write_file(path, string, mode):
 
 
 def read_file(path):
-    # Use with caution, the function does not check existence of file
-    file = open(path, "r")
-    content = file.read()
-    file.close()
-    return content
+    if os.path.exists(path):
+        file = open(path, "r")
+        content = file.read()
+        file.close()
+        return content
+    else:
+        print_not_found_message(path)
+        return ""
 
 
 def read_lines(path):
@@ -167,6 +170,7 @@ def map_domains_to_path(domain_files, map_path):
     content = ""
     for file in domain_files:
         content += read_file(file)
+        content = fix_content_to_append(content)
     create_directory(map_path)
     path_to_write = "{}/{}".format(map_path, DOMAINS_FILE)
     write_file(path_to_write, content, "a+")
@@ -211,3 +215,32 @@ def invoke_add_remove_commands(file, command_function, prefix):
             line = remove_line_feed(line)
             args = parse_add_remove(line)
             command_function(*args)
+
+
+def fix_content_to_append(content):
+    if content:
+        if content[-1] != "\n":
+            content += "\n"
+    return content
+
+
+def fix_file_to_append(path, content_to_add):
+    content_to_check = read_file(path)
+    if content_to_check:
+        if content_to_check[-1] != "\n":
+            content_to_add = "\n" + content_to_add
+    return content_to_add
+
+
+def save_map_command_to_conf(service, category_path, map_category_path):
+    line_to_save = "/{} /{}\n".format(fix_path(category_path), fix_path(map_category_path))
+    conf_file_path = "{}/{}{}".format(CONF_DIR, service, CONF_EXTENSION)
+    line_to_save = fix_file_to_append(conf_file_path, line_to_save)
+    write_file(conf_file_path, line_to_save, "a+")
+
+
+def save_add_remove_command_to_conf(domain, category_path, prefix, file_prefix):
+    line_to_save = "{} {} /{}\n".format(prefix, domain, fix_path(category_path))
+    conf_file_path = "{}/{}{}".format(CONF_DIR, file_prefix, CONF_EXTENSION)
+    line_to_save = fix_file_to_append(conf_file_path, line_to_save)
+    write_file(conf_file_path, line_to_save, "a+")

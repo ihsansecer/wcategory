@@ -1,6 +1,8 @@
 import click
 
-from wcategory.util import requires_environment_check, exit_if_false
+from wcategory.conf import ADD_FILE_PREFIX, ADD_PREFIX, REMOVE_FILE_PREFIX, REMOVE_PREFIX
+from wcategory.util import (requires_environment_check, exit_if_false, save_map_command_to_conf,
+                            save_add_remove_command_to_conf)
 from wcategory.command import (add_domain_to_category, remove_domain_from_category, search_domain_in_directory,
                                map_categories_of_service, initialize_environment, merge_into_output)
 
@@ -25,6 +27,7 @@ def add(domain, category_path):
     Add DOMAIN to a CATEGORY_PATH under manual directory
     """
     add_domain_to_category(domain, category_path)
+    save_add_remove_command_to_conf(domain, category_path, ADD_PREFIX, ADD_FILE_PREFIX)
 
 
 @requires_environment_check
@@ -36,6 +39,7 @@ def remove(domain, category_path):
     Remove DOMAIN from a CATEGORY_PATH under manual directory
     """
     remove_domain_from_category(domain, category_path)
+    save_add_remove_command_to_conf(domain, category_path, REMOVE_PREFIX, REMOVE_FILE_PREFIX)
 
 
 @requires_environment_check
@@ -59,6 +63,7 @@ def map(service, category_path, map_category_path):
     Maps domains from CATEGORY_PATH to MAP_CATEGORY_PATH under a SERVICE
     """
     map_categories_of_service(service, category_path, map_category_path)
+    save_map_command_to_conf(service, category_path, map_category_path)
 
 
 @requires_environment_check
