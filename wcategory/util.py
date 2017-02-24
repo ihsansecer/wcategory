@@ -4,8 +4,7 @@ import sys
 
 import click
 
-from wcategory.conf import (DOMAINS_FILE, INPUT_DIR, OUTPUT_DIR, CONF_DIR, CONF_EXTENSION, ADD_PREFIX, MAP_PREFIX,
-                            REMOVE_PREFIX)
+from wcategory.conf import DOMAINS_FILE, INPUT_DIR, OUTPUT_DIR, CONF_DIR, CONF_EXTENSION
 
 
 def write_file(path, string, mode):
@@ -15,6 +14,7 @@ def write_file(path, string, mode):
 
 
 def read_file(path):
+    # Use with caution, the function does not check existence of file
     file = open(path, "r")
     content = file.read()
     file.close()
@@ -22,10 +22,14 @@ def read_file(path):
 
 
 def read_lines(path):
-    file = open(path, "r")
-    lines = file.readlines()
-    file.close()
-    return lines
+    if os.path.exists(path):
+        file = open(path, "r")
+        lines = file.readlines()
+        file.close()
+        return lines
+    else:
+        print_not_found_message(path)
+        return []
 
 
 def write_lines(path, lines):
@@ -37,11 +41,13 @@ def write_lines(path, lines):
 
 def remove_line(path, line_to_remove):
     lines = read_lines(path)
-    file = open(path, "w")
-    for line in lines:
-        if line != line_to_remove:
-            file.write(line)
-    file.close()
+    if lines:
+        file = open(path, "w")
+        for line in lines:
+            line = remove_line_feed(line)
+            if line != line_to_remove:
+                file.write(line)
+        file.close()
 
 
 def create_directory(path):
@@ -69,31 +75,36 @@ def get_file_name(file_path):
 
 def find_domain_files(path=None):
     if path:
-        path_pattern = "**/{}/{}".format(path, DOMAINS_FILE)
+        path_pattern = "{}/**/{}".format(path, DOMAINS_FILE)
     else:
-        path_pattern = "**/{}".format(DOMAINS_FILE)
+        path_pattern = "{}".format(DOMAINS_FILE)
     return glob.glob(path_pattern, recursive=True)
 
 
-def find_conf_file(service=None):
+def find_conf_files(files_to_exclude, service=None):
     if service:
-        path_pattern = "**/{}/{}{}".format(CONF_DIR, service, CONF_EXTENSION)
+        path_pattern = "{}/{}{}".format(CONF_DIR, service, CONF_EXTENSION)
     else:
-        path_pattern = "**/{}/**{}".format(CONF_DIR, CONF_EXTENSION)
-    return glob.glob(path_pattern, recursive=True)
+        path_pattern = "{}/**{}".format(CONF_DIR, CONF_EXTENSION)
+    conf_files = glob.glob(path_pattern)
+    return [conf for conf in conf_files if conf not in files_to_exclude]
 
 
-def search_line_in_files(line, files):
-    line_text = line[:-1]
+def find_add_remove_conf_files(prefix):
+    path_pattern = "{}/{}**{}".format(CONF_DIR, prefix, CONF_EXTENSION)
+    return glob.glob(path_pattern)
+
+
+def search_line_in_files(line_to_find, files):
+    found = False
     for file in files:
         lines = read_lines(file)
-        try:
-            line_number = lines.index(line) + 1
-            print_found_message(line_text, line_number, file)
-        except ValueError:
-            pass
-    if "line_number" not in locals():
-        print_not_found_message(line_text)
+        for line_number, line in enumerate(lines):
+            if line_to_find in line:
+                print_found_message(line_to_find, line_number + 1, file)
+                found = True
+    if not found:
+        print_not_found_message(line_to_find)
 
 
 def print_found_message(line_text, line_number, file):
@@ -158,22 +169,8 @@ def map_domains_to_path(domain_files, map_path):
         content += read_file(file)
     create_directory(map_path)
     path_to_write = "{}/{}".format(map_path, DOMAINS_FILE)
-    write_file(path_to_write, content, "a")
+    write_file(path_to_write, content, "a+")
     sort_uniquify_lines(path_to_write)
-
-
-def separate_conf_file_by_command(file):
-    lines = read_lines(file)
-    separated_lines = {"map": [], "add": [], "remove": []}
-    for line in lines:
-        line = remove_line_feed(line)
-        if line[0] == MAP_PREFIX:
-            separated_lines["map"] += [line]
-        elif line[0] == ADD_PREFIX:
-            separated_lines["add"] += [line]
-        elif line[0] == REMOVE_PREFIX:
-            separated_lines["remove"] += [line]
-    return separated_lines
 
 
 def remove_line_feed(line):
@@ -182,22 +179,35 @@ def remove_line_feed(line):
     return line
 
 
-def parse_add_remove(command):
-    return command.split(" ")[1:3]
-
-
 def parse_map(command):
     return command.split(" ")[:2]
 
 
-def invoke_add_remove_commands(command_list, command_function):
-    for command in command_list:
-        args = parse_add_remove(command)
-        command_function(*args)
+def parse_add_remove(command):
+    return command.split(" ")[1:3]
 
 
-def invoke_map_commands(command_list, file, command_function):
+def check_prefix(prefix, line):
+    try:
+        return line[0] == prefix
+    except IndexError:
+        return False
+
+
+def invoke_map_commands(file, command_function, prefix):
     service = get_file_name(file)
-    for command in command_list:
-        args = parse_map(command)
-        command_function(service, *args)
+    lines = read_lines(file)
+    for line in lines:
+        if check_prefix(prefix, line):
+            line = remove_line_feed(line)
+            args = parse_map(line)
+            command_function(service, *args)
+
+
+def invoke_add_remove_commands(file, command_function, prefix):
+    lines = read_lines(file)
+    for line in lines:
+        if check_prefix(prefix, line):
+            line = remove_line_feed(line)
+            args = parse_add_remove(line)
+            command_function(*args)

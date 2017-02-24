@@ -1,7 +1,9 @@
-from wcategory.conf import INPUT_DIR, MANUAL_DIR, DOMAINS_FILE, OUTPUT_DIR
+from wcategory.conf import (INPUT_DIR, MANUAL_DIR, DOMAINS_FILE, OUTPUT_DIR, ADD_FILE_PREFIX, REMOVE_FILE_PREFIX,
+                            ADD_PREFIX, MAP_PREFIX, REMOVE_PREFIX)
 from wcategory.util import (fix_path, create_directory, remove_line, find_domain_files, search_line_in_files,
-                            create_necessary_files, remove_directory, map_domains_to_path, write_file, find_conf_file,
-                            separate_conf_file_by_command, invoke_add_remove_commands, invoke_map_commands)
+                            create_necessary_files, remove_directory, map_domains_to_path, write_file, find_conf_files,
+                            invoke_map_commands, invoke_add_remove_commands, find_add_remove_conf_files,
+                            sort_uniquify_lines)
 
 
 def add_domain_to_category(domain, category_path):
@@ -9,20 +11,23 @@ def add_domain_to_category(domain, category_path):
     create_directory(directory_path)
     file_path = "{}/{}".format(directory_path, DOMAINS_FILE)
     string_to_append = "{}\n".format(domain)
-    write_file(file_path, string_to_append, "a")
+    write_file(file_path, string_to_append, "a+")
+    sort_uniquify_lines(file_path)
 
 
 def remove_domain_from_category(domain, category_path):
-    directory_path = "{}/{}/{}".format(INPUT_DIR, MANUAL_DIR, fix_path(category_path))
+    directory_path = "{}/{}".format(OUTPUT_DIR, fix_path(category_path))
     file_path = "{}/{}".format(directory_path, DOMAINS_FILE)
-    line_to_remove = "{}\n".format(domain)
+    line_to_remove = "{}".format(domain)
     remove_line(file_path, line_to_remove)
 
 
 def search_domain_in_directory(domain, directory):
     domain_files = find_domain_files(path=directory)
-    line_to_search = "{}\n".format(domain)
-    search_line_in_files(line_to_search, domain_files)
+    conf_files = find_conf_files([])
+    line_to_search = "{}".format(domain)
+    files_to_search = domain_files + conf_files
+    search_line_in_files(line_to_search, files_to_search)
 
 
 def map_categories_of_service(service, category_path, map_category_path):
@@ -33,12 +38,16 @@ def map_categories_of_service(service, category_path, map_category_path):
 
 
 def merge_into_output(service):
-    conf_files = find_conf_file(service)
-    for file in conf_files:
-        conf_dictionary = separate_conf_file_by_command(file)
-        invoke_add_remove_commands(conf_dictionary["remove"], remove_domain_from_category)
-        invoke_add_remove_commands(conf_dictionary["add"], add_domain_to_category)
-        invoke_map_commands(conf_dictionary["map"], file, map_categories_of_service)
+    add_conf_files = find_add_remove_conf_files(ADD_FILE_PREFIX)
+    remove_conf_files = find_add_remove_conf_files(REMOVE_FILE_PREFIX)
+    files_to_exclude = add_conf_files + remove_conf_files
+    map_conf_files = find_conf_files(files_to_exclude, service)
+    for file in add_conf_files:
+        invoke_add_remove_commands(file, add_domain_to_category, ADD_PREFIX)
+    for file in map_conf_files:
+        invoke_map_commands(file, map_categories_of_service, MAP_PREFIX)
+    for file in remove_conf_files:
+        invoke_add_remove_commands(file, remove_domain_from_category, REMOVE_PREFIX)
 
 
 def initialize_environment():

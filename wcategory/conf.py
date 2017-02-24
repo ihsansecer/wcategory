@@ -16,3 +16,7 @@ ADD_PREFIX = "+"
 REMOVE_PREFIX = "-"
 # Category map prefix
 MAP_PREFIX = "/"
+# File to specify domain adds
+ADD_FILE_PREFIX = "add"
+# File to specify domain removes
+REMOVE_FILE_PREFIX = "rmv"
