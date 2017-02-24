@@ -130,14 +130,19 @@ def print_found_message(line_text, line_number, file):
     click.secho(message, fg="green")
 
 
-def print_found_count(text, counter):
-    message = "Searched text \"{}\" found {} times".format(text, counter)
-    click.secho(message, fg="blue")
-
-
 def print_not_found_message(line_text):
     message = "\"{}\" is not found".format(line_text)
     click.secho(message, fg="red")
+
+
+def print_found_count(text, count):
+    message = "Searched text \"{}\" found {} times".format(text, count)
+    click.secho(message, fg="blue")
+
+
+def print_unique_count(path, count):
+    message = "Sorted and uniquified {} domains under {}".format(count, path)
+    click.secho(message, fg="green")
 
 
 def create_necessary_files():
@@ -175,7 +180,8 @@ def sort_uniquify_lines(path, echo=True):
     unique_lines = set(lines)
     sorted_lines = sorted(unique_lines)
     if echo:
-        click.secho("Sorted and uniquified {} domains under {}".format(len(sorted_lines), path), fg="green")
+        count = len(sorted_lines)
+        print_unique_count(path, count)
     write_lines(path, sorted_lines)
     return lines
 
@@ -192,7 +198,6 @@ def map_domains_to_path(domain_files, map_path):
             content = fix_content_to_append(content)
     create_directory(map_path)
     path_to_write = "{}/{}".format(map_path, DOMAINS_FILE)
-    print(content)
     write_file(path_to_write, content, "a+")
     sort_uniquify_lines(path_to_write)
 

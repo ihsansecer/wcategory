@@ -1,7 +1,7 @@
 import click
 
-from wcategory.conf import ADD_FILE_PREFIX, ADD_PREFIX, REMOVE_FILE_PREFIX, REMOVE_PREFIX, CONF_DIR, CONF_EXTENSION, \
-    MANUAL_DIR
+from wcategory.conf import (ADD_FILE_PREFIX, ADD_PREFIX, REMOVE_FILE_PREFIX, REMOVE_PREFIX, CONF_DIR, CONF_EXTENSION,
+                            MANUAL_DIR)
 from wcategory.util import (exit_if_no, save_map_command_to_conf, save_add_remove_command_to_conf, check_environment,
                             sort_uniquify_lines, get_working_directory)
 from wcategory.command import (add_domain_to_category, remove_domain_from_category, search_text_in_directory,
