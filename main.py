@@ -1,7 +1,9 @@
 import click
 
-from wcategory.conf import ADD_FILE_PREFIX, ADD_PREFIX, REMOVE_FILE_PREFIX, REMOVE_PREFIX, CONF_DIR, CONF_EXTENSION
-from wcategory.util import exit_if_false, save_map_command_to_conf, save_add_remove_command_to_conf, check_environment
+from wcategory.conf import ADD_FILE_PREFIX, ADD_PREFIX, REMOVE_FILE_PREFIX, REMOVE_PREFIX, CONF_DIR, CONF_EXTENSION, \
+    MANUAL_DIR
+from wcategory.util import (exit_if_no, save_map_command_to_conf, save_add_remove_command_to_conf, check_environment,
+                            sort_uniquify_lines, get_working_directory)
 from wcategory.command import (add_domain_to_category, remove_domain_from_category, search_text_in_directory,
                                map_categories_of_service, initialize_environment, merge_into_output)
 
@@ -14,13 +16,16 @@ def cli():
     For category: input/service/category/domains
     For subcategory: input/service/category/subcategory/domains
 
-    Output file structure will be same as input's except its directory (output/...)
+    \b
+    Output directory structure will be same as input's except its directory (output/...)
 
-    Conf files structure:
+    \b
+    Conf directory structure:
     For service conf files: conf/service.conf
     For add conf files: conf/add.conf or conf/add_specific_name.conf
     For remove conf files: conf/rmv.conf or conf/rmv_specific_name.conf
 
+    \b
     Type "python main.py command --help" for command usages
     """
     pass
@@ -35,6 +40,7 @@ def add(domain, category_path):
     """
     check_environment()
     add_domain_to_category(domain, category_path)
+    sort_uniquify_lines(category_path)
     save_add_remove_command_to_conf(domain, category_path, ADD_PREFIX, ADD_FILE_PREFIX)
 
 
@@ -43,7 +49,7 @@ def add(domain, category_path):
 @click.argument("category_path")
 def remove(domain, category_path):
     """
-    Remove DOMAIN from a CATEGORY_PATH under input directory
+    Remove DOMAIN from a CATEGORY_PATH under output directory
     """
     check_environment()
     remove_domain_from_category(domain, category_path)
@@ -67,7 +73,7 @@ def search(text, directory):
 @click.argument("map_category_path")
 def map(service, category_path, map_category_path):
     """
-    Maps domains from CATEGORY_PATH to MAP_CATEGORY_PATH under a SERVICE
+    Maps domains from CATEGORY_PATH to MAP_CATEGORY_PATH under a SERVICE inside input directory
     """
     check_environment()
     map_categories_of_service(service, category_path, map_category_path)
@@ -82,23 +88,25 @@ def merge(service):
     """
     check_environment()
     merge_into_output(service)
-    click.secho("If you want to run merge command second time, run init to clear input files",
-                bold=True, fg="yellow")
+    click.secho("If you want to run merge command second time, run init to clear output files", fg="yellow")
 
 
 @cli.command()
-@click.option('--yes', is_flag=True, callback=exit_if_false,
+@click.option('--yes', is_flag=True, callback=exit_if_no,
               expose_value=False,
-              prompt='This command will remove the output file. Are you sure you want to continue?')
+              prompt='This command will remove the output file (if exists). Are you sure you want to continue?')
 def init():
     """
     Initializes directory structure and removes existing output directory
     """
     initialize_environment()
-    click.secho("You should now add conf files under {} directory with extension {}".format(CONF_DIR, CONF_EXTENSION),
-                fg="yellow")
-    click.secho("If you want to add/remove domains, you should add conf files with {}/{} prefix"
+    working_directory = get_working_directory()
+    click.secho("You should now add conf files under {}/{} directory with extension {} (such as alexa.conf)"
+                .format(working_directory, CONF_DIR, CONF_EXTENSION), fg="yellow")
+    click.secho("If you want to add/remove domains, you should add conf files with {}/{} prefix (such as add_foo.conf)"
                 .format(ADD_FILE_PREFIX, REMOVE_FILE_PREFIX), fg="yellow")
+    click.secho("After adding domains (by using add command), you should map their categories under {}.conf"
+                .format(MANUAL_DIR), fg="yellow")
 
 
 if __name__ == '__main__':
