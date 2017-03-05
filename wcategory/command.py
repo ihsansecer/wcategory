@@ -5,7 +5,7 @@ from wcategory.conf import (INPUT_DIR, MANUAL_DIR, DOMAINS_FILE, OUTPUT_DIR, ADD
 from wcategory.util import (fix_path, create_directory, remove_line, find_domain_files, search_text_in_files,
                             create_necessary_files, remove_directory, map_domains_to_path, write_file, find_conf_files,
                             invoke_map_commands, invoke_add_remove_commands, find_add_remove_conf_files,
-                            sort_uniquify_lines)
+                            sort_uniquify_lines, exclude_domain)
 
 
 def add_domain_to_category(domain, category_path):
@@ -32,11 +32,12 @@ def search_text_in_directory(text, directory):
     search_text_in_files(line_to_search, files_to_search)
 
 
-def map_categories_of_service(service, category_path, map_category_path):
+def map_categories_of_service(service, category_path, map_category_path, exclude_path):
     directory_path = "{}/{}/{}".format(INPUT_DIR, service, fix_path(category_path))
     map_directory_path = "{}/{}".format(OUTPUT_DIR, fix_path(map_category_path))
-    domain_files = find_domain_files(path=directory_path)
-    map_domains_to_path(domain_files, map_directory_path)
+    domain_files = find_domain_files(directory_path)
+    excluded_domain_files = exclude_domain(domain_files, directory_path, exclude_path)
+    map_domains_to_path(excluded_domain_files, map_directory_path)
 
 
 def merge_into_output(service):

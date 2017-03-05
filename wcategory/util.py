@@ -74,11 +74,14 @@ def fix_path(path):
     """
     Removes slash at the end and the beginning
     """
-    if path[0] == "/":
-        path = path[1:]
-    if path[-1] == "/":
-        path = path[:-1]
-    return path
+    try:
+        if path[0] == "/" or path[0] == "\/":
+            path = path[1:]
+        if path[-1] == "/" or path[-1] == "\/":
+            path = path[:-1]
+        return path
+    except IndexError:
+        print_unexpected_path_exit(path)
 
 
 def get_file_name(file_path):
@@ -88,7 +91,7 @@ def get_file_name(file_path):
 
 def find_domain_files(path=None):
     if path:
-        path_pattern = "**/{}/**/{}".format(path, DOMAINS_FILE)
+        path_pattern = "{}/{}".format(path, DOMAINS_FILE)
     else:
         path_pattern = "**/{}".format(DOMAINS_FILE)
     return glob.glob(path_pattern, recursive=True)
@@ -143,6 +146,12 @@ def print_found_count(text, count):
 def print_unique_count(path, count):
     message = "Sorted and uniquified {} domains under {}".format(count, path)
     click.secho(message, fg="green")
+
+
+def print_unexpected_path_exit(path):
+    message = "\"{}\" is not a valid path. Please, remove or edit it".format(path)
+    click.secho(message, fg="red")
+    sys.exit()
 
 
 def create_necessary_files():
@@ -209,7 +218,8 @@ def remove_line_feed(line):
 
 
 def parse_map(command):
-    return command.split(" ")[:2]
+    parsed = command.split(" ")
+    return tuple(parsed[:2]), [exclude[1:] for exclude in parsed[2:]]
 
 
 def parse_add_remove(command):
@@ -233,7 +243,8 @@ def invoke_map_commands(command_function, file, prefix):
         if check_prefix(prefix, line):
             line = remove_line_feed(line)
             args = parse_map(line)
-            command_function(service, *args)
+            category_paths, exclude_path = args[0], args[1]
+            command_function(service, *category_paths, exclude_path)
 
 
 def invoke_add_remove_commands(command_function, file, prefix):
@@ -271,8 +282,9 @@ def fix_file_to_append(path, content_to_add):
     return content_to_add
 
 
-def save_map_command_to_conf(service, category_path, map_category_path):
-    line_to_save = "/{} /{}\n".format(fix_path(category_path), fix_path(map_category_path))
+def save_map_command_to_conf(service, category_path, map_category_path, exclude_path):
+    line_wo_exclude = "/{} /{}\n".format(fix_path(category_path), fix_path(map_category_path))
+    line_to_save = save_map_exclude_to_conf(line_wo_exclude, exclude_path)
     conf_file_path = "{}/{}{}".format(CONF_DIR, service, CONF_EXTENSION)
     line_to_save = fix_file_to_append(conf_file_path, line_to_save)
     write_file(conf_file_path, line_to_save, "a+")
@@ -283,3 +295,23 @@ def save_add_remove_command_to_conf(domain, category_path, prefix, file_prefix):
     conf_file_path = "{}/{}{}".format(CONF_DIR, file_prefix, CONF_EXTENSION)
     line_to_save = fix_file_to_append(conf_file_path, line_to_save)
     write_file(conf_file_path, line_to_save, "a+")
+
+
+def save_map_exclude_to_conf(line_to_save, exclude_path):
+    if exclude_path:
+        line_to_save = line_to_save[:-1]
+        for path in exclude_path:
+            line_to_save += " -/{}".format(fix_path(path))
+        line_to_save += "\n"
+    return line_to_save
+
+
+def exclude_domain(domain_files, directory_path, exclude_path):
+    excluded_domain_files = []
+    if exclude_path:
+        for path in exclude_path:
+            if directory_path[-1] == "*" and directory_path[-2] == "*":
+                directory_path = directory_path[:-3]
+            exclude_directory_path = "{}/{}".format(directory_path, fix_path(path))
+            excluded_domain_files.extend(find_domain_files(exclude_directory_path))
+    return [domain_file for domain_file in domain_files if domain_file not in excluded_domain_files]

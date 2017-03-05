@@ -37,6 +37,8 @@ def cli():
     /from_category/sub_category /to_category
     For recursively mapping category (Mapping all categories under from_category)
     /from_category/** /to_category
+    For excluding specific category or categories
+    /from_category/** /to_category -/exclude_one -/exclude_another
     \b
     Format of add conf files:
     + domain.com /from_category
@@ -90,13 +92,15 @@ def search(text, directory):
 @click.argument("service")
 @click.argument("category_path")
 @click.argument("map_category_path")
-def map(service, category_path, map_category_path):
+@click.option('--exclude_path', '-e', multiple=True)
+def map(service, category_path, map_category_path, exclude_path):
     """
-    Maps domains from CATEGORY_PATH to MAP_CATEGORY_PATH under a SERVICE inside input directory
+    Maps domains from CATEGORY_PATH to MAP_CATEGORY_PATH under a SERVICE inside input directory. if EXCLUDE_PATH is used
+    excludes path from CATEGORY_PATH
     """
     check_environment()
-    map_categories_of_service(service, category_path, map_category_path)
-    save_map_command_to_conf(service, category_path, map_category_path)
+    map_categories_of_service(service, category_path, map_category_path, exclude_path)
+    save_map_command_to_conf(service, category_path, map_category_path, exclude_path)
 
 
 @cli.command()
